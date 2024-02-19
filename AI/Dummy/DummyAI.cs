@@ -1,10 +1,10 @@
-﻿namespace _420J13AS_2024_RPSLS.AI
+﻿namespace _420J13AS_2024_RPSLS.AI.Dummy
 {
     public abstract class DummyAI : BaseAI
     {
         public int DummyLevel { get; set; } = 1;
 
-        protected Move[] shuffledMoves = (Move[])(Enum.GetValues(typeof(Move)));
+        protected Move[] shuffledMoves = (Move[])Enum.GetValues(typeof(Move));
 
         public override string GetAuthor()
         {

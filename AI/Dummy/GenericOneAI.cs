@@ -1,4 +1,4 @@
-﻿namespace _420J13AS_2024_RPSLS.AI
+﻿namespace _420J13AS_2024_RPSLS.AI.Dummy
 {
     internal class GenericOneAI : DummyAI
     {
