@@ -1,7 +1,35 @@
-﻿using System.Diagnostics;
+﻿using _420J13AS_2024_RPSLS.AI.Dummy;
+using _420J13AS_2024_RPSLS.AI.Student;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace _420J13AS_2024_RPSLS
 {
+    class Contestant : IComparable<Contestant>
+    {
+        public Type AI { get; set; }
+        public string Nickname { get; set; }
+        public string Author { get; set; }
+        public int WinCount { get; set; }
+
+        public Contestant(Type ai, string nickname, string author)
+        {
+            AI = ai;
+            Nickname = nickname;
+            Author = author;
+        }
+
+        public override string ToString()
+        {
+            return $"{Nickname} ({Author}) has {WinCount} wins.";
+        }
+
+        public int CompareTo(Contestant? other)
+        {
+            return -WinCount.CompareTo(other.WinCount);
+        }
+    }
+
     public static class MoveComparator
     {
         public static int CompareWith(this Move move1, Move move2)
@@ -57,7 +85,7 @@ namespace _420J13AS_2024_RPSLS
         static bool isInstantiated;
         public static int Mutex { get; private set; }
         public static Random SeededRandom { get; private set; }
-        const int Seed = 2019;// 07 + 14 + 18 + 26 + 31 + 32;
+        const int Seed = 22 + 6 + 7;
         const int BattleCount = 20;
         readonly Type studentAI;
 
@@ -263,6 +291,82 @@ namespace _420J13AS_2024_RPSLS
                 }
             }
             Log($"!!! Challenge against {player2.GetAuthor()} " + (isSuccess ? "passed" : "failed") + " !!! \n\n", true);
+        }
+
+        public void PlayTournament()
+        {
+            IsLogging = false;
+            var contestants = new List<Contestant>();
+            foreach (var type in Assembly.GetEntryAssembly().GetTypes())
+            {
+                if (type.IsSubclassOf(typeof(StudentAI)))
+                {
+                    try
+                    {
+                        StudentAI studentAI = (StudentAI)CreateAI(type);
+
+                        studentAI.Play();
+
+                        contestants.Add(new Contestant(type, studentAI.Nickname, studentAI.GetAuthor()));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error AI: {type.Name}, {e.Message}");
+                    }
+                }
+            }
+
+            int studentCount = contestants.Count;
+            Console.WriteLine($"\n{studentCount} students entered in tournament.\n");
+            Console.WriteLine($"Some student AIs are slow, so please be patient and wait.\n");
+
+            int dummyIndex = 0;
+            var dummyTypes = new Type[] { typeof(RockOnlyAI), typeof(FavoriteOneAI), typeof(CircularAI), typeof(GenericOneAI) };
+            Type currentDummyType = null;
+            for (int i = 0; i < studentCount * 9; i++)
+            {
+                dummyIndex %= dummyTypes.Length;
+                currentDummyType = dummyTypes[dummyIndex++];
+                contestants.Add(new Contestant(currentDummyType, currentDummyType.Name, ""));
+            }
+
+            Contestant c1 = null;
+            Contestant c2 = null;
+            for (int i = 0; i < studentCount; i++)
+            {
+                c1 = contestants[i];
+                for (int j = i + 1; j < contestants.Count; j++)
+                {
+                    c2 = contestants[j];
+                    int result = Battle(CreateAI(c1.AI), CreateAI(c2.AI));
+                    if (result == 1)
+                    {
+                        c1.WinCount++;
+                    }
+                    else if (result == -1)
+                    {
+                        c2.WinCount++;
+                    }
+                }
+            }
+
+            for (int i = contestants.Count - 1; i >= studentCount * 9; i--)
+            {
+                contestants.RemoveAt(i);
+            }
+            contestants.Sort();
+
+            Console.ReadLine();
+
+            Console.WriteLine("Leaderboard________________________________");
+
+            for (int i = 0; i < studentCount; i++)
+            {
+                Console.WriteLine(contestants[i]);
+                Console.ReadLine();
+            }
+            Console.WriteLine("FIN");
+            Console.ReadLine();
         }
 
         Move ClampMove(Move move)
